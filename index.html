@@ -217,7 +217,8 @@
 </div>
 
 <script>
-  const PASS = "Ashik#12";
+  const PASS = "order@admin2024";
+  const LOGIN_KEY = 'ot_admin_logged_in';
   let isAdmin = false;
   let orders = [];
   let DB_URL = '';
@@ -254,6 +255,9 @@
   function showApp() {
     document.getElementById('setupScreen').style.display = 'none';
     document.getElementById('mainApp').style.display = 'block';
+    if (localStorage.getItem(LOGIN_KEY) === 'yes') {
+      setAdminUI(true);
+    }
   }
 
   function setSyncStatus(s) {
@@ -278,15 +282,28 @@
       .catch(() => setSyncStatus('err'));
   }
 
-  function tryLogin() {
-    if (document.getElementById('passInput').value === PASS) {
-      isAdmin = true;
+  function setAdminUI(loggedIn) {
+    isAdmin = loggedIn;
+    if (loggedIn) {
       document.getElementById('lockCard').style.display = 'none';
       document.getElementById('addCard').style.display = 'block';
-      document.getElementById('authBadge').textContent = '✓ Admin';
+      document.getElementById('authBadge').innerHTML = '✓ Admin &nbsp;<span style="font-size:10px;opacity:0.7">| Logout</span>';
       document.getElementById('authBadge').className = 'badge badge-open';
+    } else {
+      document.getElementById('addCard').style.display = 'none';
+      document.getElementById('lockCard').style.display = 'block';
+      document.getElementById('authBadge').textContent = '🔒 Locked';
+      document.getElementById('authBadge').className = 'badge badge-locked';
+      document.getElementById('passInput').value = '';
+    }
+    renderOrders();
+  }
+
+  function tryLogin() {
+    if (document.getElementById('passInput').value === PASS) {
+      localStorage.setItem(LOGIN_KEY, 'yes');
       document.getElementById('passErr').textContent = '';
-      renderOrders();
+      setAdminUI(true);
     } else {
       document.getElementById('passErr').textContent = '❌ ভুল password!';
     }
@@ -294,13 +311,9 @@
 
   function handleBadgeClick() {
     if (!isAdmin) return;
-    isAdmin = false;
-    document.getElementById('addCard').style.display = 'none';
-    document.getElementById('lockCard').style.display = 'block';
-    document.getElementById('authBadge').textContent = '🔒 Locked';
-    document.getElementById('authBadge').className = 'badge badge-locked';
-    document.getElementById('passInput').value = '';
-    renderOrders();
+    if (!confirm('Logout করবে? পরের বার আবার password লাগবে।')) return;
+    localStorage.removeItem(LOGIN_KEY);
+    setAdminUI(false);
   }
 
   function saveOrder() {
