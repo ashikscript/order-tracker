@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Order Tracker</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f4f0; --surface: #ffffff; --surface2: #f0eeea;
+    --border: rgba(0,0,0,0.10); --border2: rgba(0,0,0,0.20);
+    --text: #1a1917; --text2: #6b6962; --text3: #a09d97;
+    --green: #1D9E75; --green-bg: #E1F5EE;
+    --red: #A32D2D; --red-bg: #FCEBEB;
+    --amber: #854F0B; --amber-bg: #FAEEDA;
+    --radius: 14px; --radius-sm: 9px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111110; --surface: #1c1c1a; --surface2: #242422;
+      --border: rgba(255,255,255,0.09); --border2: rgba(255,255,255,0.18);
+      --text: #f0ede8; --text2: #9c9890; --text3: #5c5a55;
+      --green: #5DCAA5; --green-bg: #085041;
+      --red: #F09595; --red-bg: #501313;
+      --amber: #FAC775; --amber-bg: #412402;
+    }
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 1.5rem 1rem 4rem; }
+  .container { max-width: 640px; margin: 0 auto; }
+
+  #setupScreen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 0; }
+  .setup-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 2rem 1.75rem; width: 100%; max-width: 500px; }
+  .setup-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .setup-sub { font-size: 13px; color: var(--text2); margin-bottom: 1.5rem; line-height: 1.65; }
+  .step { display: flex; gap: 12px; margin-bottom: 1rem; align-items: flex-start; }
+  .step-num { min-width: 24px; height: 24px; border-radius: 50%; background: var(--surface2); border: 0.5px solid var(--border2); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; color: var(--text2); margin-top: 1px; }
+  .step-text { font-size: 13px; color: var(--text2); line-height: 1.65; }
+  .step-text a { color: var(--green); text-decoration: none; }
+  .step-text a:hover { text-decoration: underline; }
+  .step-text code { background: var(--surface2); border: 0.5px solid var(--border); border-radius: 4px; padding: 1px 6px; font-size: 12px; font-family: monospace; color: var(--text); word-break: break-all; }
+  .setup-fields { margin: 1.5rem 0 0; display: flex; flex-direction: column; gap: 12px; }
+  .field label { display: block; font-size: 11px; font-weight: 700; color: var(--text3); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.06em; }
+  input { width: 100%; background: var(--surface2); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 14px; color: var(--text); font-family: inherit; outline: none; transition: border-color 0.15s; }
+  input:focus { border-color: var(--border2); }
+  input::placeholder { color: var(--text3); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; border: none; transition: opacity 0.15s, transform 0.1s; width: 100%; }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--text); color: var(--bg); }
+  .btn-primary:hover { opacity: 0.83; }
+  .err { font-size: 12px; color: var(--red); margin-top: 4px; }
+  .info-txt { font-size: 12px; color: var(--text3); margin-top: 4px; }
+
+  #mainApp { display: none; }
+  .app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+  .app-title { display: flex; align-items: center; gap: 9px; font-size: 19px; font-weight: 700; letter-spacing: -0.3px; }
+  .badge { font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 20px; cursor: default; }
+  .badge-locked { background: var(--amber-bg); color: var(--amber); }
+  .badge-open { background: var(--green-bg); color: var(--green); cursor: pointer; }
+  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+  .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  .metric { background: var(--surface2); border-radius: var(--radius-sm); padding: 1rem 1.1rem; }
+  .metric-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); margin-bottom: 6px; }
+  .metric-value { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; }
+  .metric-value.green { color: var(--green); }
+  .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 1rem; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  @media (max-width: 460px) { .row2 { grid-template-columns: 1fr; } }
+  .btn-save { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; border: none; background: var(--text); color: var(--bg); transition: opacity 0.15s, transform 0.1s; }
+  .btn-save:hover { opacity: 0.83; }
+  .btn-save:active { transform: scale(0.98); }
+  .btn-del { background: transparent; border: 0.5px solid var(--border); color: var(--text3); padding: 4px 9px; font-size: 12px; border-radius: 6px; cursor: pointer; font-family: inherit; transition: background 0.15s, color 0.15s; }
+  .btn-del:hover { background: var(--red-bg); color: var(--red); border-color: transparent; }
+  .search-wrap { position: relative; }
+  .search-wrap svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); opacity: 0.3; pointer-events: none; }
+  .search-wrap input { padding-left: 34px; }
+  .order-item { display: grid; grid-template-columns: 1fr auto auto auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+  .order-item:last-child { border-bottom: none; }
+  .order-myid { font-size: 13px; font-weight: 700; }
+  .order-otherid { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .order-note { font-size: 11px; color: var(--text2); max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .order-profit { font-size: 14px; font-weight: 700; color: var(--green); white-space: nowrap; }
+  .order-date { font-size: 11px; color: var(--text3); white-space: nowrap; }
+  .empty { text-align: center; padding: 2rem 1rem; color: var(--text3); font-size: 13px; }
+  .lock-box { display: flex; flex-direction: column; align-items: center; padding: 1.75rem 1rem; gap: 10px; text-align: center; }
+  .lock-title { font-size: 15px; font-weight: 700; }
+  .lock-sub { font-size: 13px; color: var(--text2); }
+  .lock-form { width: 100%; max-width: 260px; margin-top: 6px; display: flex; flex-direction: column; gap: 8px; }
+  .lock-form input { text-align: center; letter-spacing: 2px; }
+  .btn-login { padding: 10px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; border: none; background: var(--text); color: var(--bg); }
+  .sync-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 4px; vertical-align: middle; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .add-ok { font-size: 12px; color: var(--green); margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- SETUP -->
+  <div id="setupScreen">
+    <div class="setup-card">
+      <div class="setup-title">⚙️ একবার Firebase Setup করো</div>
+      <div class="setup-sub">এরপর সব device এ same data দেখাবে এবং data চিরকাল Google এর server এ থাকবে।</div>
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> এ Google account দিয়ে login করো → <strong>Add project</strong> → যেকোনো নাম দাও → Continue → Create project
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          Project এর ভেতরে বামে <strong>Build → Realtime Database</strong> → <strong>Create database</strong> → যেকোনো location → <strong>Start in test mode</strong> → Enable click করো
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          Database তৈরি হলে এরকম একটা URL দেখবে:<br/>
+          <code>https://your-project-default-rtdb.firebaseio.com</code><br/>
+          সেটা copy করে নিচে paste করো।
+        </div>
+      </div>
+
+      <div class="setup-fields">
+        <div class="field">
+          <label>Firebase Realtime Database URL</label>
+          <input type="url" id="dbUrl" placeholder="https://your-project-default-rtdb.firebaseio.com" />
+        </div>
+        <button class="btn btn-primary" onclick="saveSetup()">✓ Setup Done — App চালু করো</button>
+        <div class="err" id="setupErr"></div>
+        <div class="info-txt" id="setupInfo"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="mainApp">
+    <div class="app-header">
+      <div class="app-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
+        Order Tracker
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span id="syncStatus" style="font-size:11px;color:var(--text3)"></span>
+        <span class="badge badge-locked" id="authBadge" onclick="handleBadgeClick()">🔒 Locked</span>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Total Orders</div>
+        <div class="metric-value" id="totalOrders">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Total Profit</div>
+        <div class="metric-value green" id="totalProfit">—</div>
+      </div>
+    </div>
+
+    <div class="card" id="addCard" style="display:none">
+      <div class="section-label">New Entry</div>
+      <div class="row2">
+        <div class="field">
+          <label>My site order ID</label>
+          <input type="text" id="myId" placeholder="e.g. ORD-1001" />
+        </div>
+        <div class="field">
+          <label>Other site order ID</label>
+          <input type="text" id="otherId" placeholder="e.g. EXT-5523" />
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Profit (৳)</label>
+          <input type="number" id="profit" placeholder="0" />
+        </div>
+        <div class="field">
+          <label>Note (optional)</label>
+          <input type="text" id="note" placeholder="..." />
+        </div>
+      </div>
+      <button class="btn-save" onclick="saveOrder()">＋ Save order</button>
+      <div class="err" id="addErr"></div>
+      <div class="add-ok" id="addOk"></div>
+    </div>
+
+    <div class="card" id="lockCard">
+      <div class="lock-box">
+        <div style="font-size:34px">🔐</div>
+        <div class="lock-title">Admin Login</div>
+        <div class="lock-sub">Order add করতে password দাও</div>
+        <div class="lock-form">
+          <input type="password" id="passInput" placeholder="Password..." onkeydown="if(event.key==='Enter')tryLogin()" />
+          <button class="btn-login" onclick="tryLogin()">Login</button>
+          <div class="err" id="passErr"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Search</div>
+      <div class="search-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchBox" placeholder="Type any order ID..." oninput="renderOrders()" />
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+        <div class="section-label" style="margin-bottom:0">Recent 10 Orders</div>
+        <span id="orderCount" style="font-size:11px;color:var(--text3)"></span>
+      </div>
+      <div id="orderList"><div class="empty" style="color:var(--text3)">Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const PASS = "order@admin2024";
+  let isAdmin = false;
+  let orders = [];
+  let DB_URL = '';
+
+  function init() {
+    const saved = localStorage.getItem('ot_db_url');
+    if (saved) { DB_URL = saved; showApp(); fetchOrders(); }
+    else { document.getElementById('setupScreen').style.display = 'flex'; }
+  }
+
+  function saveSetup() {
+    let url = document.getElementById('dbUrl').value.trim().replace(/\/$/, '');
+    const errEl = document.getElementById('setupErr');
+    const infoEl = document.getElementById('setupInfo');
+    errEl.textContent = ''; infoEl.textContent = '';
+    if (!url || !url.startsWith('https://')) {
+      errEl.textContent = 'সঠিক Firebase URL দাও (https:// দিয়ে শুরু)'; return;
+    }
+    infoEl.textContent = 'Connection check করছি...';
+    fetch(url + '/orders.json')
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+      .then(() => {
+        DB_URL = url;
+        localStorage.setItem('ot_db_url', url);
+        infoEl.textContent = '';
+        showApp(); fetchOrders();
+      })
+      .catch(() => {
+        infoEl.textContent = '';
+        errEl.textContent = '❌ URL কাজ করছে না। Firebase console থেকে সঠিক URL copy করো।';
+      });
+  }
+
+  function showApp() {
+    document.getElementById('setupScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+  }
+
+  function setSyncStatus(s) {
+    const el = document.getElementById('syncStatus');
+    if (s === 'syncing') el.innerHTML = '<span class="sync-dot"></span>Syncing...';
+    else if (s === 'ok') el.innerHTML = '<span class="sync-dot"></span>Live';
+    else el.innerHTML = '<span style="color:var(--red)">⚠ Offline</span>';
+  }
+
+  function fetchOrders() {
+    setSyncStatus('syncing');
+    fetch(DB_URL + '/orders.json')
+      .then(r => r.json())
+      .then(data => {
+        orders = [];
+        if (data) {
+          Object.entries(data).forEach(([key, val]) => orders.push({ fireKey: key, ...val }));
+          orders.sort((a, b) => b.ts - a.ts);
+        }
+        setSyncStatus('ok'); renderAll();
+      })
+      .catch(() => setSyncStatus('err'));
+  }
+
+  function tryLogin() {
+    if (document.getElementById('passInput').value === PASS) {
+      isAdmin = true;
+      document.getElementById('lockCard').style.display = 'none';
+      document.getElementById('addCard').style.display = 'block';
+      document.getElementById('authBadge').textContent = '✓ Admin';
+      document.getElementById('authBadge').className = 'badge badge-open';
+      document.getElementById('passErr').textContent = '';
+      renderOrders();
+    } else {
+      document.getElementById('passErr').textContent = '❌ ভুল password!';
+    }
+  }
+
+  function handleBadgeClick() {
+    if (!isAdmin) return;
+    isAdmin = false;
+    document.getElementById('addCard').style.display = 'none';
+    document.getElementById('lockCard').style.display = 'block';
+    document.getElementById('authBadge').textContent = '🔒 Locked';
+    document.getElementById('authBadge').className = 'badge badge-locked';
+    document.getElementById('passInput').value = '';
+    renderOrders();
+  }
+
+  function saveOrder() {
+    const myId = document.getElementById('myId').value.trim();
+    const otherId = document.getElementById('otherId').value.trim();
+    const profit = parseFloat(document.getElementById('profit').value) || 0;
+    const note = document.getElementById('note').value.trim();
+    if (!myId) { document.getElementById('addErr').textContent = 'My site order ID দিতে হবে!'; return; }
+    document.getElementById('addErr').textContent = '';
+    const date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
+    fetch(DB_URL + '/orders.json', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ myId, otherId, profit, note, date, ts: Date.now() })
+    }).then(() => {
+      ['myId','otherId','profit','note'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('addOk').textContent = '✓ Saved & synced!';
+      setTimeout(() => { document.getElementById('addOk').textContent = ''; }, 2000);
+      fetchOrders();
+    }).catch(() => { document.getElementById('addErr').textContent = '❌ Save হয়নি। Internet check করো।'; });
+  }
+
+  function deleteOrder(fireKey) {
+    if (!isAdmin || !confirm('Delete করবে?')) return;
+    fetch(DB_URL + '/orders/' + fireKey + '.json', { method: 'DELETE' })
+      .then(() => fetchOrders())
+      .catch(() => alert('Delete হয়নি।'));
+  }
+
+  function renderAll() {
+    document.getElementById('totalOrders').textContent = orders.length;
+    document.getElementById('totalProfit').textContent = '৳' + Math.round(orders.reduce((s, o) => s + (o.profit||0), 0)).toLocaleString('en-IN');
+    renderOrders();
+  }
+
+  function renderOrders() {
+    const q = document.getElementById('searchBox').value.trim().toLowerCase();
+    let list = q ? orders.filter(o => (o.myId+' '+o.otherId+' '+o.note).toLowerCase().includes(q)) : orders;
+    const show = list.slice(0, 10);
+    const el = document.getElementById('orderList');
+    const cEl = document.getElementById('orderCount');
+    if (!show.length) { el.innerHTML = '<div class="empty">কোনো order পাওয়া যায়নি</div>'; cEl.textContent = ''; return; }
+    cEl.textContent = list.length > 10 ? `Showing 10 of ${list.length}` : `${list.length} টি`;
+    el.innerHTML = show.map(o => `
+      <div class="order-item">
+        <div>
+          <div class="order-myid">${esc(o.myId)}</div>
+          ${o.otherId ? `<div class="order-otherid">${esc(o.otherId)}</div>` : ''}
+          ${o.note ? `<div class="order-note" title="${esc(o.note)}">${esc(o.note)}</div>` : ''}
+        </div>
+        <div class="order-profit">৳${Math.round(o.profit||0).toLocaleString('en-IN')}</div>
+        <div class="order-date">${o.date}</div>
+        ${isAdmin ? `<button class="btn-del" onclick="deleteOrder('${o.fireKey}')">✕</button>` : '<div></div>'}
+      </div>`).join('');
+  }
+
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  init();
+</script>
+</body>
+</html>
