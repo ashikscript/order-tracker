@@ -6,53 +6,27 @@
 <title>Order Tracker</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-
 :root{
-  --bg:#F7F7F5;
-  --surface:#FFFFFF;
-  --surface2:#F0EFEC;
-  --border:#E4E3DF;
-  --border-strong:#C9C8C3;
-  --text:#1C1B18;
-  --text2:#6B6A65;
-  --text3:#AEADA7;
-  --accent:#3D7EF5;
-  --accent-bg:#EEF3FE;
-  --green:#1A9468;
-  --green-bg:#E8F5F0;
-  --red:#C0392B;
-  --red-bg:#FDECEA;
-  --amber:#9A5E0A;
-  --amber-bg:#FDF3E3;
-  --r:12px;
-  --r-sm:8px;
+  --bg:#F7F7F5;--surface:#FFFFFF;--surface2:#F0EFEC;
+  --border:#E4E3DF;--border-strong:#C9C8C3;
+  --text:#1C1B18;--text2:#6B6A65;--text3:#AEADA7;
+  --accent:#3D7EF5;--green:#1A9468;--green-bg:#E8F5F0;
+  --red:#C0392B;--red-bg:#FDECEA;--amber:#9A5E0A;--amber-bg:#FDF3E3;
+  --r:12px;--r-sm:8px;
 }
-
 @media(prefers-color-scheme:dark){
   :root{
-    --bg:#141413;
-    --surface:#1E1E1C;
-    --surface2:#272725;
-    --border:#323230;
-    --border-strong:#484742;
-    --text:#EDECEA;
-    --text2:#918F89;
-    --text3:#57564F;
-    --accent:#5B93F7;
-    --accent-bg:#1A2540;
-    --green:#4DB88A;
-    --green-bg:#0D3328;
-    --red:#E57373;
-    --red-bg:#3B1212;
-    --amber:#F0B96B;
-    --amber-bg:#3A2206;
+    --bg:#141413;--surface:#1E1E1C;--surface2:#272725;
+    --border:#323230;--border-strong:#484742;
+    --text:#EDECEA;--text2:#918F89;--text3:#57564F;
+    --accent:#5B93F7;--green:#4DB88A;--green-bg:#0D3328;
+    --red:#E57373;--red-bg:#3B1212;--amber:#F0B96B;--amber-bg:#3A2206;
   }
 }
-
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:1.5rem 1rem 5rem;font-size:14px;line-height:1.5}
-.wrap{max-width:680px;margin:0 auto}
+.wrap{max-width:700px;margin:0 auto}
 
-/* ── SETUP ── */
+/* SETUP */
 #setupScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 0}
 .setup-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:2rem;width:100%;max-width:500px}
 .setup-logo{font-size:28px;margin-bottom:1rem}
@@ -66,11 +40,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .step-t a:hover{text-decoration:underline}
 .step-t code{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:12px;font-family:monospace;color:var(--text);word-break:break-all}
 
-/* ── INPUTS ── */
+/* INPUTS */
 .field-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;display:block}
-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;font-size:14px;color:var(--text);font-family:inherit;outline:none;transition:border-color .15s}
-input:focus{border-color:var(--accent)}
+input,select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;font-size:14px;color:var(--text);font-family:inherit;outline:none;transition:border-color .15s}
+input:focus,select:focus{border-color:var(--accent)}
 input::placeholder{color:var(--text3)}
+select{cursor:pointer}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 18px;border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:none;transition:opacity .15s,transform .1s;width:100%}
 .btn:active{transform:scale(.98)}
 .btn-primary{background:var(--accent);color:#fff}
@@ -78,9 +53,8 @@ input::placeholder{color:var(--text3)}
 .err{font-size:12px;color:var(--red);margin-top:5px}
 .hint{font-size:12px;color:var(--text3);margin-top:5px}
 
-/* ── MAIN APP ── */
+/* MAIN */
 #mainApp{display:none}
-
 .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
 .app-title{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:700;letter-spacing:-.2px}
 .app-title svg{color:var(--accent)}
@@ -88,23 +62,22 @@ input::placeholder{color:var(--text3)}
 .sync-badge{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
-
 .badge{font-size:12px;font-weight:600;padding:4px 12px;border-radius:20px;cursor:default;border:1px solid transparent}
-.badge-locked{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-bg)}
-.badge-admin{background:var(--green-bg);color:var(--green);cursor:pointer;border-color:var(--green-bg)}
+.badge-locked{background:var(--amber-bg);color:var(--amber)}
+.badge-admin{background:var(--green-bg);color:var(--green);cursor:pointer}
 
-/* metrics */
+/* METRICS */
 .metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
 .metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem 1.25rem}
 .metric-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:6px}
 .metric-value{font-size:26px;font-weight:700;letter-spacing:-.5px;color:var(--text)}
 .metric-value.green{color:var(--green)}
 
-/* card */
+/* CARD */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.2rem;margin-bottom:1rem}
 .card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:1rem}
 
-/* form grid */
+/* FORM */
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 @media(max-width:460px){.row2{grid-template-columns:1fr}}
 .btn-save{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:none;background:var(--accent);color:#fff;transition:opacity .15s,transform .1s;margin-top:2px}
@@ -112,24 +85,23 @@ input::placeholder{color:var(--text3)}
 .btn-save:active{transform:scale(.98)}
 .ok-msg{font-size:12px;color:var(--green);margin-top:6px;min-height:18px}
 
-/* lock */
+/* LOCK */
 .lock-center{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:1.5rem .5rem}
 .lock-icon{font-size:30px}
 .lock-h{font-size:16px;font-weight:700}
 .lock-sub{font-size:13px;color:var(--text2)}
 .lock-form{width:100%;max-width:240px;display:flex;flex-direction:column;gap:8px;margin-top:4px}
 .lock-form input{text-align:center;letter-spacing:2px}
-.btn-login{padding:9px;border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:none;background:var(--accent);color:#fff;transition:opacity .15s}
-.btn-login:hover{opacity:.88}
+.btn-login{padding:9px;border-radius:var(--r-sm);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:none;background:var(--accent);color:#fff}
 
-/* search */
+/* SEARCH */
 .search-wrap{position:relative}
 .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}
 .search-wrap input{padding-left:34px}
 
-/* order table */
+/* ORDER TABLE */
 .tbl-head{display:grid;grid-template-columns:1.8fr 1.8fr 1fr 1fr auto;gap:6px;padding:0 0 8px;border-bottom:1px solid var(--border);margin-bottom:2px}
-.tbl-head-cell{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
+.tbl-hcell{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3)}
 .order-row{display:grid;grid-template-columns:1.8fr 1.8fr 1fr 1fr auto;gap:6px;align-items:center;padding:11px 0;border-bottom:1px solid var(--border)}
 .order-row:last-child{border-bottom:none}
 .cell{font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -137,40 +109,44 @@ input::placeholder{color:var(--text3)}
 .cell-profit{font-size:14px;font-weight:700;color:var(--green);white-space:nowrap}
 .cell-date{font-size:13px;color:var(--text3);white-space:nowrap}
 .sub-note{font-size:11px;color:var(--text3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.btn-del{background:transparent;border:1px solid var(--border);color:var(--text3);padding:3px 8px;font-size:12px;border-radius:6px;cursor:pointer;font-family:inherit;transition:all .15s;flex-shrink:0}
+.btn-del{background:transparent;border:1px solid var(--border);color:var(--text3);padding:3px 8px;font-size:12px;border-radius:6px;cursor:pointer;font-family:inherit;transition:all .15s}
 .btn-del:hover{background:var(--red-bg);color:var(--red);border-color:transparent}
 .empty{text-align:center;padding:2rem 1rem;color:var(--text3);font-size:14px}
 .order-count{font-size:12px;color:var(--text3)}
+
+/* PROFIT SUMMARY */
+.summary-controls{display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.summary-controls select{width:auto;flex:1;min-width:100px}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.summary-item{background:var(--surface2);border-radius:var(--r-sm);padding:.9rem 1rem}
+.summary-item-label{font-size:11px;color:var(--text3);font-weight:600;margin-bottom:4px}
+.summary-item-val{font-size:18px;font-weight:700;color:var(--green)}
+.summary-item-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.summary-total{background:var(--green-bg);border:1px solid var(--green);border-radius:var(--r-sm);padding:.9rem 1rem;margin-bottom:10px}
+.summary-total-label{font-size:11px;color:var(--green);font-weight:600;margin-bottom:3px}
+.summary-total-val{font-size:22px;font-weight:700;color:var(--green)}
+
+/* EXPORT BTN */
+.btn-export{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--surface2);color:var(--text2);transition:all .15s}
+.btn-export:hover{background:var(--green-bg);color:var(--green);border-color:var(--green)}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<!-- ── SETUP ── -->
+<!-- SETUP -->
 <div id="setupScreen">
   <div class="setup-box">
     <div class="setup-logo">📦</div>
     <div class="setup-h">One-time Firebase Setup</div>
     <div class="setup-sub">After this, all your devices will show the same data — stored permanently on Google's servers.</div>
     <div class="steps">
-      <div class="step">
-        <div class="step-n">1</div>
-        <div class="step-t">Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → Sign in with Google → <strong>Add project</strong> → Enter any name → <strong>Create project</strong></div>
-      </div>
-      <div class="step">
-        <div class="step-n">2</div>
-        <div class="step-t">Inside the project → <strong>Build → Realtime Database</strong> → <strong>Create database</strong> → Any location → <strong>Start in test mode</strong> → <strong>Enable</strong></div>
-      </div>
-      <div class="step">
-        <div class="step-n">3</div>
-        <div class="step-t">Copy the database URL shown at the top:<br/><code>https://your-project-default-rtdb.firebaseio.com</code><br/>Paste it below.</div>
-      </div>
+      <div class="step"><div class="step-n">1</div><div class="step-t">Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → Sign in → <strong>Add project</strong> → Enter any name → <strong>Create project</strong></div></div>
+      <div class="step"><div class="step-n">2</div><div class="step-t">Inside project → <strong>Build → Realtime Database</strong> → <strong>Create database</strong> → Any location → <strong>Start in test mode</strong> → <strong>Enable</strong></div></div>
+      <div class="step"><div class="step-n">3</div><div class="step-t">Copy the URL shown at the top:<br/><code>https://your-project-default-rtdb.firebaseio.com</code><br/>Paste it below.</div></div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
-      <div>
-        <label class="field-label">Firebase Database URL</label>
-        <input type="url" id="dbUrl" placeholder="https://your-project-default-rtdb.firebaseio.com"/>
-      </div>
+      <div><label class="field-label">Firebase Database URL</label><input type="url" id="dbUrl" placeholder="https://your-project-default-rtdb.firebaseio.com"/></div>
       <button class="btn btn-primary" onclick="saveSetup()">Save &amp; Launch App</button>
       <div class="err" id="setupErr"></div>
       <div class="hint" id="setupHint"></div>
@@ -178,7 +154,7 @@ input::placeholder{color:var(--text3)}
   </div>
 </div>
 
-<!-- ── MAIN APP ── -->
+<!-- MAIN APP -->
 <div id="mainApp">
 
   <div class="topbar">
@@ -192,7 +168,7 @@ input::placeholder{color:var(--text3)}
     </div>
   </div>
 
-  <!-- Metrics -->
+  <!-- Total metrics -->
   <div class="metrics">
     <div class="metric">
       <div class="metric-label">Total Orders</div>
@@ -204,35 +180,23 @@ input::placeholder{color:var(--text3)}
     </div>
   </div>
 
-  <!-- Add form (admin) -->
+  <!-- Add form -->
   <div class="card" id="addCard" style="display:none">
     <div class="card-title">New Entry</div>
     <div class="row2">
-      <div>
-        <label class="field-label">My Site Order ID</label>
-        <input type="text" id="myId" placeholder="e.g. ORD-1001"/>
-      </div>
-      <div>
-        <label class="field-label">Other Site Order ID</label>
-        <input type="text" id="otherId" placeholder="e.g. EXT-5523"/>
-      </div>
+      <div><label class="field-label">My Site Order ID</label><input type="text" id="myId" placeholder="e.g. ORD-1001"/></div>
+      <div><label class="field-label">Other Site Order ID</label><input type="text" id="otherId" placeholder="e.g. EXT-5523"/></div>
     </div>
     <div class="row2">
-      <div>
-        <label class="field-label">Profit (৳)</label>
-        <input type="number" id="profit" placeholder="0"/>
-      </div>
-      <div>
-        <label class="field-label">Note (optional)</label>
-        <input type="text" id="note" placeholder="..."/>
-      </div>
+      <div><label class="field-label">Profit (৳)</label><input type="number" id="profit" placeholder="0"/></div>
+      <div><label class="field-label">Note (optional)</label><input type="text" id="note" placeholder="..."/></div>
     </div>
     <button class="btn-save" onclick="saveOrder()">+ Save Order</button>
     <div class="err" id="addErr"></div>
     <div class="ok-msg" id="addOk"></div>
   </div>
 
-  <!-- Lock screen -->
+  <!-- Lock -->
   <div class="card" id="lockCard">
     <div class="lock-center">
       <div class="lock-icon">🔐</div>
@@ -244,6 +208,25 @@ input::placeholder{color:var(--text3)}
         <div class="err" id="passErr"></div>
       </div>
     </div>
+  </div>
+
+  <!-- Profit Summary -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+      <div class="card-title" style="margin-bottom:0">Profit Summary</div>
+      <button class="btn-export" onclick="exportExcel()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export to Excel
+      </button>
+    </div>
+    <div class="summary-controls">
+      <select id="summaryType" onchange="renderSummary()">
+        <option value="monthly">Monthly</option>
+        <option value="yearly">Yearly</option>
+      </select>
+      <select id="summaryYear" onchange="renderSummary()"></select>
+    </div>
+    <div id="summaryContent"></div>
   </div>
 
   <!-- Search -->
@@ -264,43 +247,43 @@ input::placeholder{color:var(--text3)}
     <div id="orderList"><div class="empty">Loading...</div></div>
   </div>
 
-</div><!-- /mainApp -->
-</div><!-- /wrap -->
+</div>
+</div>
 
 <script>
-const PASS = "order@admin2024";
-const DB_KEY = "ot_db_url";
-const LOGIN_KEY = "ot_admin";
-let isAdmin = false, orders = [], DB_URL = "";
+const PASS="order@admin2024",DB_KEY="ot_db_url",LOGIN_KEY="ot_admin";
+let isAdmin=false,orders=[],DB_URL="";
+
+const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 function init(){
-  const s = localStorage.getItem(DB_KEY);
-  if(s){ DB_URL = s; showApp(); fetchOrders(); }
-  else document.getElementById("setupScreen").style.display = "flex";
+  const s=localStorage.getItem(DB_KEY);
+  if(s){DB_URL=s;showApp();fetchOrders();}
+  else document.getElementById("setupScreen").style.display="flex";
 }
 
 function saveSetup(){
-  const url = document.getElementById("dbUrl").value.trim().replace(/\/$/,"");
-  const eEl = document.getElementById("setupErr"), hEl = document.getElementById("setupHint");
-  eEl.textContent = ""; hEl.textContent = "";
-  if(!url.startsWith("https://")){ eEl.textContent = "Please enter a valid https:// URL."; return; }
-  hEl.textContent = "Checking connection...";
-  fetch(url+"/orders.json").then(r=>{ if(!r.ok) throw 0; return r.json(); })
-    .then(()=>{ DB_URL=url; localStorage.setItem(DB_KEY,url); hEl.textContent=""; showApp(); fetchOrders(); })
-    .catch(()=>{ hEl.textContent=""; eEl.textContent="❌ URL not working. Please check Firebase console."; });
+  const url=document.getElementById("dbUrl").value.trim().replace(/\/$/,"");
+  const eEl=document.getElementById("setupErr"),hEl=document.getElementById("setupHint");
+  eEl.textContent="";hEl.textContent="";
+  if(!url.startsWith("https://")){eEl.textContent="Please enter a valid https:// URL.";return;}
+  hEl.textContent="Checking connection...";
+  fetch(url+"/orders.json").then(r=>{if(!r.ok)throw 0;return r.json();})
+    .then(()=>{DB_URL=url;localStorage.setItem(DB_KEY,url);hEl.textContent="";showApp();fetchOrders();})
+    .catch(()=>{hEl.textContent="";eEl.textContent="❌ URL not working. Please check Firebase console.";});
 }
 
 function showApp(){
-  document.getElementById("setupScreen").style.display = "none";
-  document.getElementById("mainApp").style.display = "block";
-  if(localStorage.getItem(LOGIN_KEY)==="yes") setAdmin(true);
+  document.getElementById("setupScreen").style.display="none";
+  document.getElementById("mainApp").style.display="block";
+  if(localStorage.getItem(LOGIN_KEY)==="yes")setAdmin(true);
 }
 
 function setSyncStatus(s){
-  const el = document.getElementById("syncStatus");
-  if(s==="ok") el.innerHTML = '<div class="dot"></div><span>Live</span>';
-  else if(s==="syncing") el.innerHTML = '<span style="color:var(--text3)">Syncing...</span>';
-  else el.innerHTML = '<span style="color:var(--red)">⚠ Offline</span>';
+  const el=document.getElementById("syncStatus");
+  if(s==="ok")el.innerHTML='<div class="dot"></div><span>Live</span>';
+  else if(s==="syncing")el.innerHTML='<span style="color:var(--text3)">Syncing...</span>';
+  else el.innerHTML='<span style="color:var(--red)">⚠ Offline</span>';
 }
 
 function fetchOrders(){
@@ -308,94 +291,180 @@ function fetchOrders(){
   fetch(DB_URL+"/orders.json").then(r=>r.json())
     .then(data=>{
       orders=[];
-      if(data) Object.entries(data).forEach(([k,v])=>orders.push({fireKey:k,...v}));
+      if(data)Object.entries(data).forEach(([k,v])=>orders.push({fireKey:k,...v}));
       orders.sort((a,b)=>b.ts-a.ts);
-      setSyncStatus("ok"); renderAll();
+      setSyncStatus("ok");renderAll();
     }).catch(()=>setSyncStatus("err"));
 }
 
 function setAdmin(on){
-  isAdmin = on;
+  isAdmin=on;
   if(on){
-    document.getElementById("lockCard").style.display = "none";
-    document.getElementById("addCard").style.display = "block";
-    document.getElementById("authBadge").innerHTML = "✓ Admin <span style='opacity:.55;font-size:10px'>· Logout</span>";
-    document.getElementById("authBadge").className = "badge badge-admin";
-  } else {
-    document.getElementById("addCard").style.display = "none";
-    document.getElementById("lockCard").style.display = "block";
-    document.getElementById("authBadge").textContent = "🔒 Locked";
-    document.getElementById("authBadge").className = "badge badge-locked";
-    document.getElementById("passInput").value = "";
+    document.getElementById("lockCard").style.display="none";
+    document.getElementById("addCard").style.display="block";
+    document.getElementById("authBadge").innerHTML="✓ Admin <span style='opacity:.55;font-size:10px'>· Logout</span>";
+    document.getElementById("authBadge").className="badge badge-admin";
+  }else{
+    document.getElementById("addCard").style.display="none";
+    document.getElementById("lockCard").style.display="block";
+    document.getElementById("authBadge").textContent="🔒 Locked";
+    document.getElementById("authBadge").className="badge badge-locked";
+    document.getElementById("passInput").value="";
   }
   renderOrders();
 }
 
 function tryLogin(){
-  if(document.getElementById("passInput").value === PASS){
+  if(document.getElementById("passInput").value===PASS){
     localStorage.setItem(LOGIN_KEY,"yes");
-    document.getElementById("passErr").textContent = "";
+    document.getElementById("passErr").textContent="";
     setAdmin(true);
-  } else {
-    document.getElementById("passErr").textContent = "❌ Wrong password!";
+  }else{
+    document.getElementById("passErr").textContent="❌ Wrong password!";
   }
 }
 
 function handleBadgeClick(){
-  if(!isAdmin) return;
-  if(!confirm("Logout from this device?")) return;
-  localStorage.removeItem(LOGIN_KEY);
-  setAdmin(false);
+  if(!isAdmin)return;
+  if(!confirm("Logout from this device?"))return;
+  localStorage.removeItem(LOGIN_KEY);setAdmin(false);
 }
 
 function saveOrder(){
-  const myId = document.getElementById("myId").value.trim();
-  const otherId = document.getElementById("otherId").value.trim();
-  const profit = parseFloat(document.getElementById("profit").value)||0;
-  const note = document.getElementById("note").value.trim();
-  if(!myId){ document.getElementById("addErr").textContent = "My Site Order ID is required!"; return; }
-  document.getElementById("addErr").textContent = "";
-  const date = new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"2-digit"});
+  const myId=document.getElementById("myId").value.trim();
+  const otherId=document.getElementById("otherId").value.trim();
+  const profit=parseFloat(document.getElementById("profit").value)||0;
+  const note=document.getElementById("note").value.trim();
+  if(!myId){document.getElementById("addErr").textContent="My Site Order ID is required!";return;}
+  document.getElementById("addErr").textContent="";
+  const now=new Date();
+  const date=now.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"2-digit"});
+  const month=now.getMonth(); // 0-11
+  const year=now.getFullYear();
   fetch(DB_URL+"/orders.json",{
-    method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({myId,otherId,profit,note,date,ts:Date.now()})
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({myId,otherId,profit,note,date,ts:Date.now(),month,year})
   }).then(()=>{
     ["myId","otherId","profit","note"].forEach(id=>document.getElementById(id).value="");
-    document.getElementById("addOk").textContent = "✓ Saved & synced!";
-    setTimeout(()=>{ document.getElementById("addOk").textContent=""; },2000);
+    document.getElementById("addOk").textContent="✓ Saved & synced!";
+    setTimeout(()=>{document.getElementById("addOk").textContent="";},2000);
     fetchOrders();
-  }).catch(()=>{ document.getElementById("addErr").textContent = "❌ Save failed. Check your internet."; });
+  }).catch(()=>{document.getElementById("addErr").textContent="❌ Save failed. Check your internet.";});
 }
 
 function deleteOrder(key){
-  if(!isAdmin||!confirm("Delete this order?")) return;
+  if(!isAdmin||!confirm("Delete this order?"))return;
   fetch(DB_URL+"/orders/"+key+".json",{method:"DELETE"})
-    .then(()=>fetchOrders())
-    .catch(()=>alert("Delete failed."));
+    .then(()=>fetchOrders()).catch(()=>alert("Delete failed."));
 }
 
 function renderAll(){
-  document.getElementById("totalOrders").textContent = orders.length;
-  document.getElementById("totalProfit").textContent = "৳"+Math.round(orders.reduce((s,o)=>s+(o.profit||0),0)).toLocaleString("en-IN");
+  document.getElementById("totalOrders").textContent=orders.length;
+  document.getElementById("totalProfit").textContent="৳"+Math.round(orders.reduce((s,o)=>s+(o.profit||0),0)).toLocaleString("en-IN");
+  populateYearDropdown();
+  renderSummary();
   renderOrders();
 }
 
+/* ── SUMMARY ── */
+function populateYearDropdown(){
+  const years=[...new Set(orders.map(o=>o.year||new Date(o.ts).getFullYear()))].sort((a,b)=>b-a);
+  const sel=document.getElementById("summaryYear");
+  const cur=sel.value;
+  sel.innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join("");
+  if(cur&&years.includes(Number(cur)))sel.value=cur;
+}
+
+function renderSummary(){
+  const type=document.getElementById("summaryType").value;
+  const year=parseInt(document.getElementById("summaryYear").value)||new Date().getFullYear();
+  const el=document.getElementById("summaryContent");
+
+  if(type==="monthly"){
+    // filter this year
+    const yearOrders=orders.filter(o=>(o.year||new Date(o.ts).getFullYear())===year);
+    const monthData=Array(12).fill(0).map((_,i)=>({
+      month:i,
+      profit:yearOrders.filter(o=>(o.month!==undefined?o.month:new Date(o.ts).getMonth())===i).reduce((s,o)=>s+(o.profit||0),0),
+      count:yearOrders.filter(o=>(o.month!==undefined?o.month:new Date(o.ts).getMonth())===i).length
+    }));
+    const yearTotal=yearOrders.reduce((s,o)=>s+(o.profit||0),0);
+    el.innerHTML=`
+      <div class="summary-total">
+        <div class="summary-total-label">Total ${year}</div>
+        <div class="summary-total-val">৳${Math.round(yearTotal).toLocaleString("en-IN")}</div>
+        <div style="font-size:11px;color:var(--green);margin-top:2px">${yearOrders.length} orders</div>
+      </div>
+      <div class="summary-grid">
+        ${monthData.map(m=>`
+          <div class="summary-item">
+            <div class="summary-item-label">${MONTHS[m.month]}</div>
+            <div class="summary-item-val">৳${Math.round(m.profit).toLocaleString("en-IN")}</div>
+            <div class="summary-item-sub">${m.count} orders</div>
+          </div>`).join("")}
+      </div>`;
+  } else {
+    // yearly
+    const years=[...new Set(orders.map(o=>o.year||new Date(o.ts).getFullYear()))].sort((a,b)=>b-a);
+    if(!years.length){el.innerHTML='<div class="empty">No data yet</div>';return;}
+    const yearData=years.map(y=>({
+      year:y,
+      profit:orders.filter(o=>(o.year||new Date(o.ts).getFullYear())===y).reduce((s,o)=>s+(o.profit||0),0),
+      count:orders.filter(o=>(o.year||new Date(o.ts).getFullYear())===y).length
+    }));
+    const allTotal=orders.reduce((s,o)=>s+(o.profit||0),0);
+    el.innerHTML=`
+      <div class="summary-total">
+        <div class="summary-total-label">All Time Total</div>
+        <div class="summary-total-val">৳${Math.round(allTotal).toLocaleString("en-IN")}</div>
+        <div style="font-size:11px;color:var(--green);margin-top:2px">${orders.length} orders</div>
+      </div>
+      <div class="summary-grid">
+        ${yearData.map(y=>`
+          <div class="summary-item">
+            <div class="summary-item-label">${y.year}</div>
+            <div class="summary-item-val">৳${Math.round(y.profit).toLocaleString("en-IN")}</div>
+            <div class="summary-item-sub">${y.count} orders</div>
+          </div>`).join("")}
+      </div>`;
+  }
+}
+
+/* ── EXPORT EXCEL ── */
+function exportExcel(){
+  if(!orders.length){alert("No orders to export.");return;}
+  const rows=[["My Order ID","Other Order ID","Profit (৳)","Note","Date"]];
+  orders.forEach(o=>rows.push([o.myId||"",o.otherId||"",o.profit||0,o.note||"",o.date||""]));
+
+  // Build CSV (opens in Excel fine)
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+  const BOM="\uFEFF"; // UTF-8 BOM for Excel
+  const blob=new Blob([BOM+csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=`orders_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ── ORDERS TABLE ── */
 function renderOrders(){
-  const q = document.getElementById("searchBox").value.trim().toLowerCase();
-  let list = q ? orders.filter(o=>(o.myId+" "+o.otherId+" "+o.note).toLowerCase().includes(q)) : orders;
-  const show = list.slice(0,10);
-  const el = document.getElementById("orderList");
-  const cEl = document.getElementById("orderCount");
-  if(!show.length){ el.innerHTML='<div class="empty">No orders found</div>'; cEl.textContent=""; return; }
-  cEl.textContent = list.length>10 ? `Showing 10 of ${list.length}` : `${list.length} orders`;
-  el.innerHTML =
+  const q=document.getElementById("searchBox").value.trim().toLowerCase();
+  let list=q?orders.filter(o=>(o.myId+" "+o.otherId+" "+o.note).toLowerCase().includes(q)):orders;
+  const show=list.slice(0,10);
+  const el=document.getElementById("orderList");
+  const cEl=document.getElementById("orderCount");
+  if(!show.length){el.innerHTML='<div class="empty">No orders found</div>';cEl.textContent="";return;}
+  cEl.textContent=list.length>10?`Showing 10 of ${list.length}`:`${list.length} orders`;
+  el.innerHTML=
     `<div class="tbl-head">
-      <div class="tbl-head-cell">My Order</div>
-      <div class="tbl-head-cell">Other Order</div>
-      <div class="tbl-head-cell">Profit</div>
-      <div class="tbl-head-cell">Date</div>
+      <div class="tbl-hcell">My Order</div>
+      <div class="tbl-hcell">Other Order</div>
+      <div class="tbl-hcell">Profit</div>
+      <div class="tbl-hcell">Date</div>
       <div></div>
-    </div>` +
+    </div>`+
     show.map(o=>`
     <div class="order-row">
       <div>
@@ -409,7 +478,7 @@ function renderOrders(){
     </div>`).join("");
 }
 
-function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 
 init();
 </script>
