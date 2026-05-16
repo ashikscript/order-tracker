@@ -9,39 +9,10 @@
 <body>
 <div class="wrap">
 
-  <!-- ── SETUP SCREEN ── -->
-  <div id="setupScreen">
-    <div class="setup-box">
-      <div class="setup-logo">📦</div>
-      <div class="setup-h">One-time Firebase Setup</div>
-      <div class="setup-sub">After this, all your devices will show the same data — stored permanently on Google's servers.</div>
-      <div class="steps">
-        <div class="step">
-          <div class="step-n">1</div>
-          <div class="step-t">Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → Sign in → <strong>Add project</strong> → Enter any name → <strong>Create project</strong></div>
-        </div>
-        <div class="step">
-          <div class="step-n">2</div>
-          <div class="step-t">Inside project → <strong>Build → Realtime Database</strong> → <strong>Create database</strong> → Any location → <strong>Start in test mode</strong> → <strong>Enable</strong></div>
-        </div>
-        <div class="step">
-          <div class="step-n">3</div>
-          <div class="step-t">Copy the URL shown at the top:<br/><code>https://your-project-default-rtdb.firebaseio.com</code><br/>Paste it below.</div>
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div>
-          <label class="field-label">Firebase Database URL</label>
-          <input type="url" id="dbUrl" placeholder="https://your-project-default-rtdb.firebaseio.com"/>
-        </div>
-        <button class="btn btn-primary" onclick="saveSetup()">Save &amp; Launch App</button>
-        <div class="err" id="setupErr"></div>
-        <div class="hint" id="setupHint"></div>
-      </div>
-    </div>
-  </div>
+  <!-- SETUP SCREEN (hidden - URL hardcoded) -->
+  <div id="setupScreen" style="display:none"></div>
 
-  <!-- ── MAIN APP ── -->
+  <!-- MAIN APP -->
   <div id="mainApp">
 
     <!-- Top bar -->
@@ -55,6 +26,11 @@
       </div>
       <div class="top-right">
         <div class="sync-badge" id="syncStatus"></div>
+        <!-- Trash Button -->
+        <button class="btn-trash" onclick="openTrash()" title="Trash">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          <span id="trashBadge" class="trash-badge"></span>
+        </button>
         <span class="badge badge-locked" id="authBadge" onclick="handleBadgeClick()">🔒 Locked</span>
       </div>
     </div>
@@ -71,9 +47,9 @@
       </div>
     </div>
 
-    <!-- New Entry (Admin only) -->
+    <!-- New Entry / Edit (Admin only) -->
     <div class="card" id="addCard" style="display:none">
-      <div class="card-title">New Entry</div>
+      <div class="card-title" id="formTitle">New Entry</div>
       <div class="row2">
         <div>
           <label class="field-label">My Site Order ID</label>
@@ -94,7 +70,10 @@
           <input type="text" id="note" placeholder="..."/>
         </div>
       </div>
-      <button class="btn-save" onclick="saveOrder()">+ Save Order</button>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn-save" id="saveBtn" onclick="saveOrder()">+ Save Order</button>
+        <button class="btn-cancel" id="cancelEdit" style="display:none" onclick="clearForm()">✕ Cancel</button>
+      </div>
       <div class="err" id="addErr"></div>
       <div class="ok-msg" id="addOk"></div>
     </div>
@@ -162,6 +141,21 @@
 
   </div><!-- /mainApp -->
 </div><!-- /wrap -->
+
+<!-- TRASH MODAL -->
+<div id="trashModal" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        Trash
+      </div>
+      <button class="modal-close" onclick="closeTrash()">✕</button>
+    </div>
+    <div class="modal-sub">Deleted orders are kept for 15 days, then removed automatically.</div>
+    <div id="trashList"><div class="empty">Loading...</div></div>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>
