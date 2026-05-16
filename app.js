@@ -1,41 +1,18 @@
 const PASS = "order@admin2024";
-const DB_KEY = "ot_db_url";
 const LOGIN_KEY = "ot_admin";
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
+const DB_URL = "https://order-tracker-e59a4-default-rtdb.firebaseio.com";
+
 let isAdmin = false;
 let orders = [];
-let DB_URL = "";
+let trashItems = [];
+let editingKey = null;
 
-/* ── INIT ── */
 function init() {
-  const s = localStorage.getItem(DB_KEY);
-  if (s) { DB_URL = s; showApp(); fetchOrders(); }
-  else document.getElementById("setupScreen").style.display = "flex";
-}
-
-/* ── SETUP ── */
-function saveSetup() {
-  const url = document.getElementById("dbUrl").value.trim().replace(/\/$/, "");
-  const eEl = document.getElementById("setupErr");
-  const hEl = document.getElementById("setupHint");
-  eEl.textContent = ""; hEl.textContent = "";
-  if (!url.startsWith("https://")) {
-    eEl.textContent = "Please enter a valid https:// URL."; return;
-  }
-  hEl.textContent = "Checking connection...";
-  fetch(url + "/orders.json")
-    .then(r => { if (!r.ok) throw 0; return r.json(); })
-    .then(() => {
-      DB_URL = url;
-      localStorage.setItem(DB_KEY, url);
-      hEl.textContent = "";
-      showApp(); fetchOrders();
-    })
-    .catch(() => {
-      hEl.textContent = "";
-      eEl.textContent = "❌ URL not working. Please check Firebase console.";
-    });
+  showApp();
+  fetchOrders();
+  fetchTrash();
 }
 
 function showApp() {
@@ -44,7 +21,6 @@ function showApp() {
   if (localStorage.getItem(LOGIN_KEY) === "yes") setAdmin(true);
 }
 
-/* ── SYNC ── */
 function setSyncStatus(s) {
   const el = document.getElementById("syncStatus");
   if (s === "ok") el.innerHTML = '<div class="dot"></div><span>Live</span>';
@@ -66,7 +42,30 @@ function fetchOrders() {
     .catch(() => setSyncStatus("err"));
 }
 
-/* ── AUTH ── */
+function fetchTrash() {
+  fetch(DB_URL + "/trash.json")
+    .then(r => r.json())
+    .then(data => {
+      trashItems = [];
+      if (data) Object.entries(data).forEach(([k, v]) => trashItems.push({ fireKey: k, ...v }));
+      trashItems.sort((a, b) => b.deletedAt - a.deletedAt);
+      const cutoff = Date.now() - 15 * 24 * 60 * 60 * 1000;
+      trashItems.forEach(item => {
+        if (item.deletedAt < cutoff) {
+          fetch(DB_URL + "/trash/" + item.fireKey + ".json", { method: "DELETE" });
+        }
+      });
+      trashItems = trashItems.filter(item => item.deletedAt >= cutoff);
+      renderTrashBadge();
+    })
+    .catch(() => {});
+}
+
+function renderTrashBadge() {
+  const badge = document.getElementById("trashBadge");
+  if (badge) badge.textContent = trashItems.length > 0 ? trashItems.length : "";
+}
+
 function setAdmin(on) {
   isAdmin = on;
   if (on) {
@@ -101,7 +100,6 @@ function handleBadgeClick() {
   setAdmin(false);
 }
 
-/* ── SAVE / DELETE ── */
 function saveOrder() {
   const myId = document.getElementById("myId").value.trim();
   const otherId = document.getElementById("otherId").value.trim();
@@ -113,28 +111,138 @@ function saveOrder() {
   const date = now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" });
   const month = now.getMonth();
   const year = now.getFullYear();
-  fetch(DB_URL + "/orders.json", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ myId, otherId, profit, note, date, ts: Date.now(), month, year })
-  }).then(() => {
-    ["myId", "otherId", "profit", "note"].forEach(id => document.getElementById(id).value = "");
-    document.getElementById("addOk").textContent = "✓ Saved & synced!";
-    setTimeout(() => { document.getElementById("addOk").textContent = ""; }, 2000);
-    fetchOrders();
-  }).catch(() => {
-    document.getElementById("addErr").textContent = "❌ Save failed. Check your internet.";
-  });
+
+  if (editingKey) {
+    fetch(DB_URL + "/orders/" + editingKey + ".json", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ myId, otherId, profit, note })
+    }).then(() => {
+      clearForm();
+      document.getElementById("addOk").textContent = "✓ Updated!";
+      setTimeout(() => { document.getElementById("addOk").textContent = ""; }, 2000);
+      fetchOrders();
+    }).catch(() => {
+      document.getElementById("addErr").textContent = "❌ Update failed.";
+    });
+  } else {
+    fetch(DB_URL + "/orders.json", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ myId, otherId, profit, note, date, ts: Date.now(), month, year })
+    }).then(() => {
+      clearForm();
+      document.getElementById("addOk").textContent = "✓ Saved & synced!";
+      setTimeout(() => { document.getElementById("addOk").textContent = ""; }, 2000);
+      fetchOrders();
+    }).catch(() => {
+      document.getElementById("addErr").textContent = "❌ Save failed. Check your internet.";
+    });
+  }
+}
+
+function clearForm() {
+  ["myId", "otherId", "profit", "note"].forEach(id => document.getElementById(id).value = "");
+  editingKey = null;
+  document.getElementById("saveBtn").textContent = "+ Save Order";
+  document.getElementById("cancelEdit").style.display = "none";
+  document.getElementById("addErr").textContent = "";
+}
+
+function startEdit(key) {
+  const order = orders.find(o => o.fireKey === key);
+  if (!order) return;
+  editingKey = key;
+  document.getElementById("myId").value = order.myId || "";
+  document.getElementById("otherId").value = order.otherId || "";
+  document.getElementById("profit").value = order.profit || "";
+  document.getElementById("note").value = order.note || "";
+  document.getElementById("saveBtn").textContent = "✓ Update Order";
+  document.getElementById("cancelEdit").style.display = "inline-flex";
+  document.getElementById("addCard").scrollIntoView({ behavior: "smooth" });
 }
 
 function deleteOrder(key) {
-  if (!isAdmin || !confirm("Delete this order?")) return;
-  fetch(DB_URL + "/orders/" + key + ".json", { method: "DELETE" })
-    .then(() => fetchOrders())
-    .catch(() => alert("Delete failed."));
+  if (!isAdmin || !confirm("Move to Trash?")) return;
+  const order = orders.find(o => o.fireKey === key);
+  if (!order) return;
+  const trashData = { ...order, deletedAt: Date.now() };
+  delete trashData.fireKey;
+  fetch(DB_URL + "/trash.json", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(trashData)
+  }).then(() => {
+    return fetch(DB_URL + "/orders/" + key + ".json", { method: "DELETE" });
+  }).then(() => {
+    fetchOrders();
+    fetchTrash();
+  }).catch(() => alert("Delete failed."));
 }
 
-/* ── RENDER ── */
+function openTrash() {
+  fetchTrash();
+  document.getElementById("trashModal").style.display = "flex";
+  setTimeout(renderTrashModal, 400);
+}
+
+function closeTrash() {
+  document.getElementById("trashModal").style.display = "none";
+}
+
+function renderTrashModal() {
+  const el = document.getElementById("trashList");
+  if (!trashItems.length) {
+    el.innerHTML = '<div class="empty">🗑 Trash is empty</div>';
+    return;
+  }
+  const now = Date.now();
+  el.innerHTML = trashItems.map(item => {
+    const daysLeft = Math.ceil((15 * 24 * 60 * 60 * 1000 - (now - item.deletedAt)) / (24 * 60 * 60 * 1000));
+    return `
+    <div class="trash-row">
+      <div class="trash-info">
+        <div class="cell">${esc(item.myId)}</div>
+        <div class="cell-dim">${item.otherId ? esc(item.otherId) : "—"}</div>
+        <div class="cell-profit">৳${Math.round(item.profit || 0).toLocaleString("en-IN")}</div>
+        <div class="trash-expiry">📅 ${item.date || "—"} &nbsp;·&nbsp; ⏳ ${daysLeft} day${daysLeft !== 1 ? "s" : ""} left</div>
+      </div>
+      <div class="trash-actions">
+        <button class="btn-restore" onclick="restoreOrder('${item.fireKey}')">↩ Restore</button>
+        <button class="btn-perm-del" onclick="permDelete('${item.fireKey}')">✕ Delete</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function restoreOrder(trashKey) {
+  const item = trashItems.find(t => t.fireKey === trashKey);
+  if (!item) return;
+  const orderData = { ...item };
+  delete orderData.fireKey;
+  delete orderData.deletedAt;
+  fetch(DB_URL + "/orders.json", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(orderData)
+  }).then(() => {
+    return fetch(DB_URL + "/trash/" + trashKey + ".json", { method: "DELETE" });
+  }).then(() => {
+    fetchOrders();
+    fetchTrash();
+    setTimeout(renderTrashModal, 500);
+  }).catch(() => alert("Restore failed."));
+}
+
+function permDelete(trashKey) {
+  if (!confirm("Permanently delete? Cannot be undone.")) return;
+  fetch(DB_URL + "/trash/" + trashKey + ".json", { method: "DELETE" })
+    .then(() => {
+      fetchTrash();
+      setTimeout(renderTrashModal, 400);
+    });
+}
+
 function renderAll() {
   document.getElementById("totalOrders").textContent = orders.length;
   document.getElementById("totalProfit").textContent = "৳" + Math.round(orders.reduce((s, o) => s + (o.profit || 0), 0)).toLocaleString("en-IN");
@@ -143,7 +251,6 @@ function renderAll() {
   renderOrders();
 }
 
-/* ── SUMMARY ── */
 function populateYearDropdown() {
   const years = [...new Set(orders.map(o => o.year || new Date(o.ts).getFullYear()))].sort((a, b) => b - a);
   const sel = document.getElementById("summaryYear");
@@ -155,7 +262,6 @@ function populateYearDropdown() {
 function populateMonthDropdown(year) {
   const sel = document.getElementById("summaryMonth");
   if (!sel) return;
-  // Only show months that have data
   const yearOrders = orders.filter(o => (o.year || new Date(o.ts).getFullYear()) === year);
   const usedMonths = [...new Set(yearOrders.map(o => o.month !== undefined ? o.month : new Date(o.ts).getMonth()))].sort((a, b) => a - b);
   const curMonth = parseInt(sel.value);
@@ -224,7 +330,6 @@ function renderSummary() {
   }
 }
 
-/* ── EXPORT EXCEL ── */
 function exportExcel() {
   if (!orders.length) { alert("No orders to export."); return; }
   const rows = [["My Order ID", "Other Order ID", "Profit (৳)", "Note", "Date"]];
@@ -239,7 +344,6 @@ function exportExcel() {
   URL.revokeObjectURL(url);
 }
 
-/* ── ORDERS TABLE ── */
 function renderOrders() {
   const q = document.getElementById("searchBox").value.trim().toLowerCase();
   let list = q ? orders.filter(o => (o.myId + " " + o.otherId + " " + o.note).toLowerCase().includes(q)) : orders;
@@ -265,10 +369,22 @@ function renderOrders() {
       <div class="cell-dim">${o.otherId ? esc(o.otherId) : "—"}</div>
       <div class="cell-profit">৳${Math.round(o.profit || 0).toLocaleString("en-IN")}</div>
       <div class="cell-date">${o.date || "—"}</div>
-      ${isAdmin ? `<button class="btn-del" onclick="deleteOrder('${o.fireKey}')">✕</button>` : `<div></div>`}
+      ${isAdmin ? `
+        <div class="row-actions">
+          <button class="btn-edit" onclick="startEdit('${o.fireKey}')" title="Edit">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn-del" onclick="deleteOrder('${o.fireKey}')" title="Move to Trash">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          </button>
+        </div>` : `<div></div>`}
     </div>`).join("");
 }
 
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+window.addEventListener("click", function(e) {
+  if (e.target === document.getElementById("trashModal")) closeTrash();
+});
 
 init();
