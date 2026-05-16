@@ -25,7 +25,7 @@ A simple and beginner-friendly order tracking system built for learning and smal
 Add screenshots here
 
 ```bash
-/screenshot.png
+/Screenshot_149
 ```
 
 ---
