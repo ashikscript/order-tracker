@@ -1,8 +1,18 @@
-const PASS = "order@admin2024";
-const LOGIN_KEY = "ot_admin";
+const ADMIN_EMAIL = "ashikurrahmann56@gmail.com";
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 const DB_URL = "https://order-tracker-e59a4-default-rtdb.firebaseio.com";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCKgQnp3OThhaLcg8VLGq77wdqmzNjuzPQ",
+  authDomain: "order-tracker-e59a4.firebaseapp.com",
+  databaseURL: "https://order-tracker-e59a4-default-rtdb.firebaseio.com",
+  projectId: "order-tracker-e59a4",
+  storageBucket: "order-tracker-e59a4.firebasestorage.app",
+  messagingSenderId: "900643444169",
+  appId: "1:900643444169:web:9bac821b017e58cfb68418"
+};
+firebase.initializeApp(firebaseConfig);
 
 let isAdmin = false;
 let orders = [];
@@ -13,12 +23,23 @@ function init() {
   showApp();
   fetchOrders();
   fetchTrash();
+  firebase.auth().onAuthStateChanged(function (user) {
+    setAdmin(!!user);
+  });
 }
 
 function showApp() {
   document.getElementById("setupScreen").style.display = "none";
   document.getElementById("mainApp").style.display = "block";
-  if (localStorage.getItem(LOGIN_KEY) === "yes") setAdmin(true);
+}
+
+function authedFetch(url, options) {
+  const user = firebase.auth().currentUser;
+  if (!user) return Promise.reject(new Error("Not signed in"));
+  return user.getIdToken().then(function (token) {
+    const sep = url.indexOf("?") > -1 ? "&" : "?";
+    return fetch(url + sep + "auth=" + token, options);
+  });
 }
 
 function setSyncStatus(s) {
@@ -51,8 +72,8 @@ function fetchTrash() {
       trashItems.sort((a, b) => b.deletedAt - a.deletedAt);
       const cutoff = Date.now() - 15 * 24 * 60 * 60 * 1000;
       trashItems.forEach(item => {
-        if (item.deletedAt < cutoff) {
-          fetch(DB_URL + "/trash/" + item.fireKey + ".json", { method: "DELETE" });
+        if (item.deletedAt < cutoff && firebase.auth().currentUser) {
+          authedFetch(DB_URL + "/trash/" + item.fireKey + ".json", { method: "DELETE" });
         }
       });
       trashItems = trashItems.filter(item => item.deletedAt >= cutoff);
@@ -84,20 +105,18 @@ function setAdmin(on) {
 }
 
 function tryLogin() {
-  if (document.getElementById("passInput").value === PASS) {
-    localStorage.setItem(LOGIN_KEY, "yes");
-    document.getElementById("passErr").textContent = "";
-    setAdmin(true);
-  } else {
-    document.getElementById("passErr").textContent = "❌ Wrong password!";
-  }
+  const pass = document.getElementById("passInput").value;
+  document.getElementById("passErr").textContent = "";
+  firebase.auth().signInWithEmailAndPassword(ADMIN_EMAIL, pass)
+    .catch(() => {
+      document.getElementById("passErr").textContent = "❌ Wrong password!";
+    });
 }
 
 function handleBadgeClick() {
   if (!isAdmin) return;
   if (!confirm("Logout from this device?")) return;
-  localStorage.removeItem(LOGIN_KEY);
-  setAdmin(false);
+  firebase.auth().signOut();
 }
 
 function saveOrder() {
@@ -113,7 +132,7 @@ function saveOrder() {
   const year = now.getFullYear();
 
   if (editingKey) {
-    fetch(DB_URL + "/orders/" + editingKey + ".json", {
+    authedFetch(DB_URL + "/orders/" + editingKey + ".json", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ myId, otherId, profit, note })
@@ -126,7 +145,7 @@ function saveOrder() {
       document.getElementById("addErr").textContent = "❌ Update failed.";
     });
   } else {
-    fetch(DB_URL + "/orders.json", {
+    authedFetch(DB_URL + "/orders.json", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ myId, otherId, profit, note, date, ts: Date.now(), month, year })
@@ -168,12 +187,12 @@ function deleteOrder(key) {
   if (!order) return;
   const trashData = { ...order, deletedAt: Date.now() };
   delete trashData.fireKey;
-  fetch(DB_URL + "/trash.json", {
+  authedFetch(DB_URL + "/trash.json", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(trashData)
   }).then(() => {
-    return fetch(DB_URL + "/orders/" + key + ".json", { method: "DELETE" });
+    return authedFetch(DB_URL + "/orders/" + key + ".json", { method: "DELETE" });
   }).then(() => {
     fetchOrders();
     fetchTrash();
@@ -221,12 +240,12 @@ function restoreOrder(trashKey) {
   const orderData = { ...item };
   delete orderData.fireKey;
   delete orderData.deletedAt;
-  fetch(DB_URL + "/orders.json", {
+  authedFetch(DB_URL + "/orders.json", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(orderData)
   }).then(() => {
-    return fetch(DB_URL + "/trash/" + trashKey + ".json", { method: "DELETE" });
+    return authedFetch(DB_URL + "/trash/" + trashKey + ".json", { method: "DELETE" });
   }).then(() => {
     fetchOrders();
     fetchTrash();
@@ -236,7 +255,7 @@ function restoreOrder(trashKey) {
 
 function permDelete(trashKey) {
   if (!confirm("Permanently delete? Cannot be undone.")) return;
-  fetch(DB_URL + "/trash/" + trashKey + ".json", { method: "DELETE" })
+  authedFetch(DB_URL + "/trash/" + trashKey + ".json", { method: "DELETE" })
     .then(() => {
       fetchTrash();
       setTimeout(renderTrashModal, 400);
